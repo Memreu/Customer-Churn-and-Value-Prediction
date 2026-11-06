@@ -1,10 +1,40 @@
 # 🛒 Müşteri Kaybı Tahmini, Müşteri Değeri ve Kampanya Optimizasyonu
 
+<p align="center">
+  <img src="https://img.shields.io/badge/Python-3.13-3776AB?logo=python&logoColor=white" alt="Python">
+  <img src="https://img.shields.io/badge/LightGBM-4.x-2E5EAA" alt="LightGBM">
+  <img src="https://img.shields.io/badge/SHAP-açıklanabilirlik-E4572E" alt="SHAP">
+  <img src="https://img.shields.io/badge/CLTV-BG--NBD%20%C3%97%20Gamma--Gamma-29A36A" alt="CLTV">
+  <img src="https://img.shields.io/badge/lisans-MIT-lightgrey" alt="MIT">
+</p>
+
+<p align="center">
+  <a href="https://nbviewer.org/github/Memreu/musteri-kaybi-ve-deger-tahmini/blob/main/musteri_kaybi_ve_deger.ipynb"><img src="https://img.shields.io/badge/📓_Notebook'u_görüntüle-nbviewer-F37626?logo=jupyter&logoColor=white" alt="nbviewer"></a>
+  <a href="https://colab.research.google.com/github/Memreu/musteri-kaybi-ve-deger-tahmini/blob/main/musteri_kaybi_ve_deger.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open in Colab"></a>
+</p>
+
 Uçtan uca bir e-ticaret müşteri zekâsı projesi: **kim gidecek**, **giderse ne kaybederiz** ve **kampanya bütçesini kime, hangi kanalla harcamalıyız** sorularını tek bir akışta cevaplıyor.
 
 Klasik RFM ve CLTV analizleri müşterinin *bugün* nerede olduğunu anlatır. Bu proje bir adım ileri gidiyor: **geleceği tahmin ediyor**, tahmini **paraya çeviriyor** ve sonuçlarını **güven aralıklarıyla** raporluyor.
 
 <p align="center"><img src="images/06_risk_deger_haritasi.png" width="90%"></p>
+
+> 🇬🇧 **In English:** An end-to-end customer intelligence project on ~540K e-commerce transactions. It predicts **who will churn** in the next 90 days (LightGBM, AUC ≈ 0.75, validated out-of-time), **how much revenue is at risk** (hurdle model blended with classic BG-NBD × Gamma-Gamma CLTV, R² 0.55), and **which retention channel maximises expected profit** for each customer. Results are reported with a locked test set, bootstrap confidence intervals, seasonal recalibration and an A/B test power analysis.
+
+<details>
+<summary><b>📑 İçindekiler</b></summary>
+
+- [Öne çıkan sonuçlar](#öne-çıkan-sonuçlar)
+- [Doğrulama yaklaşımı](#doğrulama-yaklaşımı)
+- [Temel bulgular](#temel-bulgular)
+- [Model geliştirme süreci](#model-geliştirme-süreci)
+- [Proje akışı](#proje-akışı)
+- [Kurulum ve çalıştırma](#kurulum-ve-çalıştırma)
+- [Klasör yapısı](#klasör-yapısı)
+- [Veri](#veri)
+- [Sınırlılıklar ve sonraki adımlar](#sınırlılıklar-ve-sonraki-adımlar)
+
+</details>
 
 ## Öne çıkan sonuçlar
 
@@ -94,6 +124,13 @@ jupyter lab musteri_kaybi_ve_deger.ipynb
 
 Veri setini ayrıca indirmene gerek yok: notebook ilk çalıştırmada `data/retail.csv` dosyasını (~45 MB) otomatik indirir. Tüm notebook birkaç dakikada çalışır. Python 3.13 ile test edildi.
 
+**Kurulum yapmadan incelemek için:**
+- 📓 [nbviewer'da görüntüle](https://nbviewer.org/github/Memreu/musteri-kaybi-ve-deger-tahmini/blob/main/musteri_kaybi_ve_deger.ipynb): Tüm çıktı ve grafiklerle, hiçbir şey kurmadan okunabilir. GitHub büyük notebook'ları bazen gösteremediği için en güvenilir yol bu.
+- ☁️ [Google Colab'da çalıştır](https://colab.research.google.com/github/Memreu/musteri-kaybi-ve-deger-tahmini/blob/main/musteri_kaybi_ve_deger.ipynb): İlk hücreden önce şu komutu çalıştırman yeterli:
+  ```python
+  !pip install -q shap lifetimes
+  ```
+
 ## Klasör yapısı
 
 ```
@@ -102,6 +139,7 @@ Veri setini ayrıca indirmene gerek yok: notebook ilk çalıştırmada `data/ret
 │   └── aksiyon_listesi.csv        # Müşteri bazında risk, değer, neden ve önerilen kanal
 ├── images/                        # README grafikleri
 ├── requirements.txt
+├── LICENSE
 └── README.md
 ```
 
@@ -118,4 +156,6 @@ Veri setini ayrıca indirmene gerek yok: notebook ilk çalıştırmada `data/ret
 
 ---
 
-**Mehmet Emre Ünlü** · [LinkedIn](https://www.linkedin.com/in/memreu) · [Kaggle](https://www.kaggle.com/memreu)
+Bu proje [MIT lisansı](LICENSE) ile paylaşılmaktadır.
+
+**Mehmet Emre Ünlü** · [GitHub](https://github.com/Memreu) · [LinkedIn](https://www.linkedin.com/in/memreu) · [Kaggle](https://www.kaggle.com/memreu)
