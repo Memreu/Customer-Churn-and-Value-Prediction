@@ -9,8 +9,8 @@
 </p>
 
 <p align="center">
-  <a href="https://nbviewer.org/github/Memreu/musteri-kaybi-ve-deger-tahmini/blob/main/musteri_kaybi_ve_deger.ipynb"><img src="https://img.shields.io/badge/📓_Notebook'u_görüntüle-nbviewer-F37626?logo=jupyter&logoColor=white" alt="nbviewer"></a>
-  <a href="https://colab.research.google.com/github/Memreu/musteri-kaybi-ve-deger-tahmini/blob/main/musteri_kaybi_ve_deger.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open in Colab"></a>
+  <a href="https://nbviewer.org/github/Memreu/Customer-Churn-and-Value-Prediction/blob/main/musteri_kaybi_ve_deger.ipynb"><img src="https://img.shields.io/badge/📓_Notebook'u_görüntüle-nbviewer-F37626?logo=jupyter&logoColor=white" alt="nbviewer"></a>
+  <a href="https://colab.research.google.com/github/Memreu/Customer-Churn-and-Value-Prediction/blob/main/musteri_kaybi_ve_deger.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open in Colab"></a>
 </p>
 
 Uçtan uca bir e-ticaret müşteri zekâsı projesi: **kim gidecek**, **giderse ne kaybederiz** ve **kampanya bütçesini kime, hangi kanalla harcamalıyız** sorularını tek bir akışta cevaplıyor.
@@ -116,8 +116,8 @@ Bu projede sonuçların inandırıcılığı, modelin kendisi kadar önemli. Bu 
 ## Kurulum ve çalıştırma
 
 ```bash
-git clone https://github.com/Memreu/musteri-kaybi-ve-deger-tahmini.git
-cd musteri-kaybi-ve-deger-tahmini
+git clone https://github.com/Memreu/Customer-Churn-and-Value-Prediction.git
+cd Customer-Churn-and-Value-Prediction
 pip install -r requirements.txt
 jupyter lab musteri_kaybi_ve_deger.ipynb
 ```
@@ -125,8 +125,8 @@ jupyter lab musteri_kaybi_ve_deger.ipynb
 Veri setini ayrıca indirmene gerek yok: notebook ilk çalıştırmada `data/retail.csv` dosyasını (~45 MB) otomatik indirir. Tüm notebook birkaç dakikada çalışır. Python 3.13 ile test edildi.
 
 **Kurulum yapmadan incelemek için:**
-- 📓 [nbviewer'da görüntüle](https://nbviewer.org/github/Memreu/musteri-kaybi-ve-deger-tahmini/blob/main/musteri_kaybi_ve_deger.ipynb): Tüm çıktı ve grafiklerle, hiçbir şey kurmadan okunabilir. GitHub büyük notebook'ları bazen gösteremediği için en güvenilir yol bu.
-- ☁️ [Google Colab'da çalıştır](https://colab.research.google.com/github/Memreu/musteri-kaybi-ve-deger-tahmini/blob/main/musteri_kaybi_ve_deger.ipynb): İlk hücreden önce şu komutu çalıştırman yeterli:
+- 📓 [nbviewer'da görüntüle](https://nbviewer.org/github/Memreu/Customer-Churn-and-Value-Prediction/blob/main/musteri_kaybi_ve_deger.ipynb): Tüm çıktı ve grafiklerle, hiçbir şey kurmadan okunabilir. GitHub büyük notebook'ları bazen gösteremediği için en güvenilir yol bu.
+- ☁️ [Google Colab'da çalıştır](https://colab.research.google.com/github/Memreu/Customer-Churn-and-Value-Prediction/blob/main/musteri_kaybi_ve_deger.ipynb): İlk hücreden önce şu komutu çalıştırman yeterli:
   ```python
   !pip install -q shap lifetimes
   ```
