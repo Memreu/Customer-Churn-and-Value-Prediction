@@ -1,0 +1,14 @@
+# Veri (notebook ilk çalıştırmada otomatik indirir, ~45 MB)
+data/
+
+# Jupyter / Python
+.ipynb_checkpoints/
+__pycache__/
+*.pyc
+.venv/
+venv/
+.env
+
+# İşletim sistemi
+.DS_Store
+Thumbs.db
