@@ -45,13 +45,13 @@ Sonuçta `outputs/aksiyon_listesi.csv` dosyasında 4.334 müşteri için mevsime
 ## Çalıştırmak için
 
 ```bash
-git clone https://github.com/Memreu/churn-and-value-prediction.git
-cd churn-and-value-prediction
+git clone https://github.com/Memreu/Customer-Churn-and-Value-Prediction.git
+cd Customer-Churn-and-Value-Prediction
 pip install -r requirements.txt
 jupyter lab musteri_kaybi_ve_deger.ipynb
 ```
 
-Notebook ilk çalıştırmada `data/retail.csv` dosyasını (~45 MB) kendisi indiriyor, tamamı birkaç dakikada çalışıyor. Python 3.13 ile denedim. GitHub büyük notebook'ları bazen gösteremediği için [nbviewer](https://nbviewer.org/github/Memreu/churn-and-value-prediction/blob/main/musteri_kaybi_ve_deger.ipynb) üzerinden okumak daha rahat olabilir. [Colab](https://colab.research.google.com/github/Memreu/churn-and-value-prediction/blob/main/musteri_kaybi_ve_deger.ipynb)'da çalıştırırken önce `!pip install -q shap lifetimes` gerekiyor.
+Notebook ilk çalıştırmada `data/retail.csv` dosyasını (~45 MB) kendisi indiriyor, tamamı birkaç dakikada çalışıyor. Python 3.13 ile denedim. GitHub büyük notebook'ları bazen gösteremediği için [nbviewer](https://nbviewer.org/github/Memreu/Customer-Churn-and-Value-Prediction/blob/main/musteri_kaybi_ve_deger.ipynb) üzerinden okumak daha rahat olabilir. [Colab](https://colab.research.google.com/github/Memreu/Customer-Churn-and-Value-Prediction/blob/main/musteri_kaybi_ve_deger.ipynb)'da çalıştırırken önce `!pip install -q shap lifetimes` gerekiyor.
 
 ## Eksikler
 
