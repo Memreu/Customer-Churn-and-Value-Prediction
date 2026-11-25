@@ -1,161 +1,60 @@
-# 🛒 Müşteri Kaybı Tahmini, Müşteri Değeri ve Kampanya Optimizasyonu
+# Müşteri Kaybı, Müşteri Değeri ve Kampanya Optimizasyonu
 
-<p align="center">
-  <img src="https://img.shields.io/badge/Python-3.13-3776AB?logo=python&logoColor=white" alt="Python">
-  <img src="https://img.shields.io/badge/LightGBM-4.x-2E5EAA" alt="LightGBM">
-  <img src="https://img.shields.io/badge/SHAP-açıklanabilirlik-E4572E" alt="SHAP">
-  <img src="https://img.shields.io/badge/CLTV-BG--NBD%20%C3%97%20Gamma--Gamma-29A36A" alt="CLTV">
-  <img src="https://img.shields.io/badge/lisans-MIT-lightgrey" alt="MIT">
-</p>
+Bu projede bir e-ticaret sitesinin işlem kayıtları üzerinden üç soruya cevap aramaya çalıştım: önümüzdeki 90 günde hangi müşteri gidecek, giderse ne kadar gelir kaybedilir ve elde sınırlı bir kampanya bütçesi varsa bu bütçe kime, hangi kanalla harcanmalı. RFM ve CLTV analizleri müşterinin bugün nerede durduğunu iyi anlatıyor; ben bunun bir adım ötesine geçip tahmini paraya çevirmek ve sonuçları güven aralıklarıyla raporlamak istedim.
 
-<p align="center">
-  <a href="https://nbviewer.org/github/Memreu/Customer-Churn-and-Value-Prediction/blob/main/musteri_kaybi_ve_deger.ipynb"><img src="https://img.shields.io/badge/📓_Notebook'u_görüntüle-nbviewer-F37626?logo=jupyter&logoColor=white" alt="nbviewer"></a>
-  <a href="https://colab.research.google.com/github/Memreu/Customer-Churn-and-Value-Prediction/blob/main/musteri_kaybi_ve_deger.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open in Colab"></a>
-</p>
+Veriyi UCI Machine Learning Repository'deki [Online Retail](https://archive.ics.uci.edu/dataset/352/online+retail) setinden aldım. İngiltere merkezli bir hediyelik eşya sitesinin 01.12.2010 ile 09.12.2011 arasındaki yaklaşık 540 bin satırlık işlem kaydı. Notebook veriyi Databricks'in *Spark: The Definitive Guide* deposundaki aynı içerikli kopyadan kendisi indiriyor.
 
-Uçtan uca bir e-ticaret müşteri zekâsı projesi: **kim gidecek**, **giderse ne kaybederiz** ve **kampanya bütçesini kime, hangi kanalla harcamalıyız** sorularını tek bir akışta cevaplıyor.
+![Risk ve değer haritası](images/06_risk_deger_haritasi.png)
 
-Klasik RFM ve CLTV analizleri müşterinin *bugün* nerede olduğunu anlatır. Bu proje bir adım ileri gidiyor: **geleceği tahmin ediyor**, tahmini **paraya çeviriyor** ve sonuçlarını **güven aralıklarıyla** raporluyor.
+## Yaklaşım
 
-<p align="center"><img src="images/06_risk_deger_haritasi.png" width="90%"></p>
+Veriyi temizledikten sonra (iadeler, eksik müşteri ID'leri, teknik kalemler, aykırı değerler) bir gözlem penceresi ve onu izleyen 90 günlük bir tahmin penceresi tanımladım. Özellikleri yalnızca gözlem penceresinden üreterek sızıntının önüne geçtim. RFM'e ek olarak 20'den fazla davranışsal özellik çıkardım.
 
-> 🇬🇧 **In English:** An end-to-end customer intelligence project on ~540K e-commerce transactions. It predicts **who will churn** in the next 90 days (LightGBM, AUC ≈ 0.75, validated out-of-time), **how much revenue is at risk** (hurdle model blended with classic BG-NBD × Gamma-Gamma CLTV, R² 0.55), and **which retention channel maximises expected profit** for each customer. Results are reported with a locked test set, bootstrap confidence intervals, seasonal recalibration and an A/B test power analysis.
+Churn için LightGBM kullandım, değer tarafında ise churn olasılığı ile Tweedie kayıplı bir harcama modelini birleştiren bir hurdle yapı kurdum ve bunu klasik BG-NBD × Gamma-Gamma CLTV ile karşılaştırıp ikisini karıştırdım.
 
-<details>
-<summary><b>📑 İçindekiler</b></summary>
+Bir istatistik öğrencisi olarak en çok önem verdiğim kısım doğrulama oldu:
 
-- [Öne çıkan sonuçlar](#öne-çıkan-sonuçlar)
-- [Doğrulama yaklaşımı](#doğrulama-yaklaşımı)
-- [Temel bulgular](#temel-bulgular)
-- [Model geliştirme süreci](#model-geliştirme-süreci)
-- [Proje akışı](#proje-akışı)
-- [Kurulum ve çalıştırma](#kurulum-ve-çalıştırma)
-- [Klasör yapısı](#klasör-yapısı)
-- [Veri](#veri)
-- [Sınırlılıklar ve sonraki adımlar](#sınırlılıklar-ve-sonraki-adımlar)
+- Test müşterilerini en başta ayırdım. Hiperparametre seçimi ve model kıyasları yalnızca eğitim setinde, 5×5 tekrarlı çapraz doğrulamayla yapıldı; test setini en sonda bir kez açtım.
+- Modeli bir dönemde eğitip hedef penceresi bittikten sonraki dönemde test ettim (3 farklı dönem). Böylece sadece aynı dönemde değil, ileriki bir zamanda da çalışıp çalışmadığını görebildim.
+- Kampanya stratejilerini değer modeliyle sıralayıp yine aynı modelle puanlamak döngüsel olurdu. Bu yüzden kurtarılan müşterinin değerini modelden bağımsız bir vekille (geçmiş harcama hızı) ölçtüm, stratejileri eşit bütçeyle kıyasladım ve test setini 2.000 kez yeniden örnekleyerek %95 güven aralıkları hesapladım.
 
-</details>
-
-## Öne çıkan sonuçlar
+## Sonuçlar
 
 | | Sonuç |
 |---|---|
-| 🎯 **Churn modeli** | LightGBM, kilitli test setinde ROC-AUC 0.74 / PR-AUC 0.65; **zamana dayalı geriye dönük testlerde 0.745–0.768** |
-| 💷 **Değer modeli** | Hurdle (churn × Tweedie) ile klasik BG-NBD × Gamma-Gamma CLTV'nin karışımı, **R² 0.55**. Tek başına: hurdle 0.52, klasik CLTV 0.50, naif yöntem 0.37 |
-| 📈 **Hedefleme** | Eşit bütçeyle risk × değer kuralı, sadece riske göre hedeflemekten **+£1.406 daha fazla kâr** (%95 GA: £841 – £1.976), modelden bağımsız bir değer ölçüsüyle |
-| 🌦️ **Mevsim kalibrasyonu** | Sıralamayı bozmadan olasılıkları düzeltiyor; geriye dönük testte Brier 0.208 → 0.200 |
-| 🧪 **A/B test tasarımı** | Kupon grubundaki ~1.800 müşteri, %15 ve üzeri ikna oranını ölçmeye yetiyor |
-| 📋 **Çıktı** | 4.334 müşteri için mevsime göre kalibre churn olasılığı, risk altındaki değer, ana risk nedeni (SHAP) ve **beklenen kârı en yüksek iletişim kanalı** |
+| Churn modeli (kilitli test) | ROC-AUC 0.74, PR-AUC 0.65 |
+| Churn modeli (zamana dayalı testler) | ROC-AUC 0.745 – 0.768 |
+| Değer modeli | R² 0.55 (hurdle 0.52, klasik CLTV 0.50, naif yöntem 0.37) |
+| Risk × değer hedeflemesinin ek kârı | +£1.406 (%95 GA: £841 – £1.976) |
+| Mevsim kalibrasyonu | Brier 0.208 → 0.200, AUC değişmeden |
 
-## Doğrulama yaklaşımı
+Modelin en önemli özelliği müşterinin kaç farklı ayda alışveriş yaptığı çıktı; yani ne kadar harcadığından çok ne kadar düzenli geldiği önemli. Kendi alışveriş aralığının yaklaşık 3 katı süre sessiz kalan müşteri belirgin şekilde riskli bölgeye geçiyor.
 
-Bu projede sonuçların inandırıcılığı, modelin kendisi kadar önemli. Bu yüzden:
+Benim için en öğretici kısım kampanya simülasyonu oldu. Risk × değer kuralı, sadece riske göre hedeflemekten her değerlendirmede ve 2.000 bootstrap örneğinin tamamında daha iyi. Ama kampanyanın mutlak kârlılığı o kadar sağlam değil: muhafazakâr değer ölçüsüyle £10'luk kupon en iyi hedeflemeyle bile yaklaşık başa baş, kupon için ikna oranının en az ~%20 olması gerekiyor. Müşteri başına £1–5'lik ucuz kanallar ise makul her ikna oranında kâr getiriyor. Bu yüzden son karar mantığında her müşteriye kendi değerine uygun maliyette bir kanal seçtim.
 
-- 🔒 **Kilitli test seti.** Test müşterileri en başta ayrıldı. Hiperparametre seçimi, model kıyasları ve değer modeli seçimi yalnızca eğitim setinde, 5×5 tekrarlı çapraz doğrulamayla yapıldı. Test seti en sonda **bir kez** açıldı.
-- ⏳ **Zamana dayalı geriye dönük test.** Model bir dönemde eğitilip hedef penceresi bittikten sonraki dönemde test edildi (3 farklı dönem). Böylece modelin sadece aynı dönemde değil, **gelecekte** de çalıştığı gösterildi.
-- 🔁 **Döngüsellikten arındırılmış kampanya değerlendirmesi.** Stratejiler değer modeliyle sıralanıp yine değer modeliyle puanlanmadı. Kurtarılan müşterinin değeri, modelden **bağımsız** bir vekille (geçmiş harcama hızı) ölçüldü.
-- ⚖️ **Eşit bütçe ve bootstrap.** Stratejiler aynı sayıda müşteriyle kıyaslandı ve test seti 2.000 kez yeniden örneklenerek **%95 güven aralıkları** hesaplandı.
+Model zamanda genelleşiyor ama kalibrasyonu mevsime göre kayıyor: yazdan eğitilen model yılbaşı sezonunda churn'ü ~9 puan fazla tahmin ediyor. Bunu geçen yılın aynı dönemindeki "taze müşteri" kohortundan tahmin ettiğim bir log-odds kaydırmasıyla, sıralamayı bozmadan düzelttim.
 
-<p align="center"><img src="images/07_zamana_dayali_test.png" width="90%"></p>
+Denediğim her şey işe yaramadı. Hiperparametre ayarı (+0.027 AUC) ve değer modelinde Gamma'dan Tweedie'ye geçiş (R² 0.36 → 0.52) belirgin fark yarattı. 8 yeni davranışsal özellik, monoton kısıtlar, lojistik regresyonla ensemble, BG-NBD özellikleri ve TF-IDF + SVD ile ürün zevk profili ise hiçbir şey değiştirmedi. 9 kesim tarihiyle veriyi çoğaltmak mevsimleri karıştırdığı için sonucu kötüleştirdi. BG-NBD'nin 9 aylık gözlemde kayıp parametrelerini sıfıra indirip herkesi aktif saydığını görmek de ilginçti.
 
-## Temel bulgular
+Güç analizine göre kupon grubundaki ~1.800 müşteri, %15 ve üzeri ikna oranını bir A/B testiyle ölçmeye yetiyor; %10 gibi küçük etkiler için havuz yetmiyor.
 
-1. **Süreklilik en güçlü koruyucu.** Modelin en önemli özelliği müşterinin kaç farklı ayda alışveriş yaptığı. Ne kadar harcadığından çok, ne kadar **düzenli** geldiği önemli.
-2. **Kişisel ritim, sabit kuraldan iyidir.** Kendi alışveriş aralığının yaklaşık 3 katı süre sessiz kalan müşteri net biçimde riskli bölgeye geçiyor.
-3. **Hedefleme kuralının üstünlüğü sağlam, kampanyanın mutlak kârlılığı ise değil.** Risk × değer kuralı her değerlendirmede ve 2.000 bootstrap örneğinin tamamında daha iyi. Ama muhafazakâr değer ölçüsüyle £10'luk kupon kampanyası en iyi hedeflemeyle bile yaklaşık başa baş; kârlılık gerçek ikna oranına bağlı ve **A/B testiyle doğrulanmalı**.
-4. **Ucuz kanallar her koşulda kârlı.** Duyarlılık analizine göre müşteri başına £1–5'lik kanallar makul her ikna oranında kâr getiriyor; pahalı kupon için ikna oranı en az ~%20 olmalı. Bu yüzden final karar mantığı her müşteriye kendi değerine uygun maliyette bir kanal seçiyor.
-5. **Model zamanda genelleşiyor ama kalibrasyonu mevsime göre kayıyor.** Yazdan eğitilen model yılbaşı sezonunda churn'ü ~9 puan fazla tahmin ediyor. Log-odds kaydırmasıyla yapılan mevsim kalibrasyonu, sıralamayı bozmadan bu kaymayı düzeltiyor ve hedef oran 5 puan hatalı olsa bile fayda sağlıyor. Kaydırma miktarı, geçen yılın aynı dönemindeki "taze müşteri" kohortundan tahmin ediliyor.
-6. **Değer tahmininde kayıp fonksiyonu kritik, birleştirmek daha da iyi.** Gamma'dan Tweedie'ye geçmek R²'yi 0.36'dan 0.52'ye çıkardı; klasik CLTV ile ortalamak ise 0.55'e. Kampanya kararı, "kalırsa değeri" ayrıca verebildiği için hurdle modeli kullanıyor.
-7. **BG-NBD kısa veride müşteri kaybını göremiyor.** 9 aylık gözlemde kayıp parametreleri sıfıra iniyor ve model herkesi aktif sayıyor.
-8. **Kampanyanın gerçek etkisi ölçülebilir.** Güç analizine göre kupon grubu, başa baş noktası (~%20) çevresindeki ikna oranlarını bir A/B testiyle güvenilir şekilde ölçmeye yetiyor; %10 gibi küçük etkiler için ise havuz yetmiyor.
+Sonuçta `outputs/aksiyon_listesi.csv` dosyasında 4.334 müşteri için mevsime göre kalibre churn olasılığı, risk altındaki değer, SHAP'a göre ana risk nedeni ve beklenen kârı en yüksek iletişim kanalı yer alıyor.
 
-<p align="center">
-  <img src="images/05_kampanya_bootstrap.png" width="90%">
-</p>
-<p align="center">
-  <img src="images/08_ab_test.png" width="75%">
-</p>
+![Kampanya bootstrap sonuçları](images/05_kampanya_bootstrap.png)
 
-## Model geliştirme süreci
-
-| Deney | Sonuç |
-|---|---|
-| Hiperparametre ayarı (sığ ağaç, düşük öğrenme hızı) | ✅ +0.027 AUC (eğitim CV), 25/25 bölmede daha iyi |
-| Değer modelinde Tweedie kaybı | ✅ R² 0.36 → 0.52 |
-| Hurdle + klasik CLTV karışımı | ✅ R² 0.52 → 0.55 |
-| Mevsim kalibrasyonu (log-odds kaydırması) | ✅ Brier 0.208 → 0.200, AUC değişmeden |
-| Çok kanallı karar mantığı | ✅ Keyfi eşikler yerine tek ekonomik kural |
-| 8 yeni davranışsal özellik | ➖ Fark yok |
-| Monoton kısıtlar | ➖ Fark yok |
-| LightGBM + lojistik regresyon ensemble | ➖ Fark yok |
-| 9 kesim tarihiyle eğitim (veriyi 8 kat artırma) | ➖ Mevsimler karıştığı için daha kötü |
-| BG-NBD / Gamma-Gamma özellikleri | ➖ Fark yok (bilgi mevcut özelliklerde zaten var) |
-| Ürün zevk profili (TF-IDF + SVD) | ➖ Fark yok |
-
-<p align="center">
-  <img src="images/03_shap.png" width="49%">
-  <img src="images/04_deger_modeli.png" width="49%">
-</p>
-
-## Proje akışı
-
-| # | Bölüm | Teknik |
-|---|---|---|
-| 1 | Veri temizleme | İadeler, eksik ID'ler, teknik kalemler, aykırı değer baskılama |
-| 2 | Keşifçi analiz | Mevsimsellik, ülke dağılımı, gün × saat ısı haritası |
-| 3 | Sızıntısız zaman bölmesi | Gözlem penceresi → 90 günlük tahmin penceresi |
-| 4 | Özellik mühendisliği | RFM + 20'den fazla davranışsal özellik |
-| 5 | RFM segmentleri | Segmentlerin gerçekleşen churn oranları |
-| 6 | Churn modeli | Kilitli test, eğitim setinde ızgara + 5×5 CV, zamana dayalı test, mevsim kalibrasyonu |
-| 7 | Açıklanabilirlik | SHAP |
-| 8 | Değer modeli | Hurdle yapı, klasik BG-NBD × Gamma-Gamma ile 25 bölmede kıyas ve karışım |
-| 9 | Kampanya simülasyonu | Bağımsız değer vekili, eşit bütçe, bootstrap güven aralıkları, duyarlılık |
-| 10 | Canlı skorlama | Çok kanallı karar mantığı, aksiyon listesi |
-| 11 | A/B test tasarımı | Güç analizi ile örneklem büyüklüğü ve karar kuralı |
-
-## Kurulum ve çalıştırma
+## Çalıştırmak için
 
 ```bash
-git clone https://github.com/Memreu/Customer-Churn-and-Value-Prediction.git
-cd Customer-Churn-and-Value-Prediction
+git clone https://github.com/Memreu/churn-and-value-prediction.git
+cd churn-and-value-prediction
 pip install -r requirements.txt
 jupyter lab musteri_kaybi_ve_deger.ipynb
 ```
 
-Veri setini ayrıca indirmene gerek yok: notebook ilk çalıştırmada `data/retail.csv` dosyasını (~45 MB) otomatik indirir. Tüm notebook birkaç dakikada çalışır. Python 3.13 ile test edildi.
+Notebook ilk çalıştırmada `data/retail.csv` dosyasını (~45 MB) kendisi indiriyor, tamamı birkaç dakikada çalışıyor. Python 3.13 ile denedim. GitHub büyük notebook'ları bazen gösteremediği için [nbviewer](https://nbviewer.org/github/Memreu/churn-and-value-prediction/blob/main/musteri_kaybi_ve_deger.ipynb) üzerinden okumak daha rahat olabilir. [Colab](https://colab.research.google.com/github/Memreu/churn-and-value-prediction/blob/main/musteri_kaybi_ve_deger.ipynb)'da çalıştırırken önce `!pip install -q shap lifetimes` gerekiyor.
 
-**Kurulum yapmadan incelemek için:**
-- 📓 [nbviewer'da görüntüle](https://nbviewer.org/github/Memreu/Customer-Churn-and-Value-Prediction/blob/main/musteri_kaybi_ve_deger.ipynb): Tüm çıktı ve grafiklerle, hiçbir şey kurmadan okunabilir. GitHub büyük notebook'ları bazen gösteremediği için en güvenilir yol bu.
-- ☁️ [Google Colab'da çalıştır](https://colab.research.google.com/github/Memreu/Customer-Churn-and-Value-Prediction/blob/main/musteri_kaybi_ve_deger.ipynb): İlk hücreden önce şu komutu çalıştırman yeterli:
-  ```python
-  !pip install -q shap lifetimes
-  ```
+## Eksikler
 
-## Klasör yapısı
+İkna oranları şimdilik varsayım; kampanyanın gerçek etkisini tasarladığım A/B testiyle ölçmek ve ardından uplift modellemeye geçmek istiyorum. Mevsim kalibrasyonu da tek bir geçmiş yıla dayanıyor, daha uzun bir veriyle mevsimselliği doğrudan modellemek daha doğru olur.
 
-```
-├── musteri_kaybi_ve_deger.ipynb   # Ana notebook (çıktılarıyla birlikte)
-├── outputs/
-│   └── aksiyon_listesi.csv        # Müşteri bazında risk, değer, neden ve önerilen kanal
-├── images/                        # README grafikleri
-├── requirements.txt
-├── LICENSE
-└── README.md
-```
-
-## Veri
-
-[Online Retail](https://archive.ics.uci.edu/dataset/352/online+retail) (UCI Machine Learning Repository): İngiltere merkezli bir hediyelik eşya e-ticaret sitesinin 01.12.2010–09.12.2011 arası ~540 bin satırlık işlem kaydı. Notebook, veriyi Databricks'in *Spark: The Definitive Guide* deposundaki aynı içerikli kopyadan indirir.
-
-## Sınırlılıklar ve sonraki adımlar
-
-- **İkna oranları varsayımdır.** Kampanyanın mutlak kârlılığı notebook'ta tasarlanan **A/B testiyle** ölçülmeli; ardından **uplift modelleme** ile kampanyaya gerçekten tepki veren müşteriler bulunabilir.
-- **Mevsim kalibrasyonu tek bir geçmiş yıla dayanıyor.** Aksiyon listesindeki sıralama güvenilir; mutlak olasılıklar ve kâr tutarları kalibre edilmiş olsa da yaklaşık.
-- **Tek yıllık veri.** Daha uzun bir geçmiş, mevsimselliği doğrudan modellemeyi mümkün kılar.
-- **Mühendislik.** Kodun `src/` modüllerine taşınması, sızıntı testleri ve bir Streamlit paneli sonraki adımlar.
-
----
-
-Bu proje [MIT lisansı](LICENSE) ile paylaşılmaktadır.
-
-**Mehmet Emre Ünlü** · [GitHub](https://github.com/Memreu) · [LinkedIn](https://www.linkedin.com/in/memreu) · [Kaggle](https://www.kaggle.com/memreu)
+MIT lisansı ile paylaşıyorum. [LinkedIn](https://www.linkedin.com/in/memreu) · [Kaggle](https://www.kaggle.com/memreu)
